@@ -1,12 +1,13 @@
 const { EntryPoint__factory } = require("@account-abstraction/contracts");
 const hre = require("hardhat");
 
-const FACTORY_NONCE = 2;
-const FACTORY_ADDRESS = "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9";
-const EP_ADDRESS = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+const FACTORY_NONCE = 1;
+const FACTORY_ADDRESS = "0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1";
+const EP_ADDRESS = "0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44";
+const PM_ADDRESS = "0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f";
 
 async function main() {
-	const [signer0] = await hre.ethers.getSigners();
+	const [signer0, signer1] = await hre.ethers.getSigners();
 	const address0 = await signer0.getAddress();
 
 	const entryPoint = await hre.ethers.getContractAt("EntryPoint", EP_ADDRESS);
@@ -17,15 +18,20 @@ async function main() {
 	});
 
 	const AccountFactory = await hre.ethers.getContractFactory("AccountFactory");
+
+	//use this init code if we only want to call execute function
 	const initCode = "0x";
+
+	//use this init code if we want to call createAccount function
 	// const initCode = FACTORY_ADDRESS +
 	// AccountFactory.interface
 	// 	.encodeFunctionData("createAccount", [address0])
 	// 	.slice(2);
 
-	console.log(sender);
+	console.log({sender});
 
-	// await entryPoint.depositTo(sender, {
+	//deposit to the entry point
+	// await entryPoint.depositTo(PM_ADDRESS, {
 	// 	value: hre.ethers.parseEther("100"),
 	// });
 
@@ -36,14 +42,17 @@ async function main() {
 		nonce: await entryPoint.getNonce(sender, 0),
 		initCode,
 		callData: Account.interface.encodeFunctionData("execute"),
-		callGasLimit: 200_000,
-		verificationGasLimit: 200_000,
-		preVerificationGas: 50_000,
-		maxFeePerGas: hre.ethers.parseUnits("10", "gwei"),
-		maxPriorityFeePerGas: hre.ethers.parseUnits("5", "gwei"),
-		paymasterAndData: "0x",
+		callGasLimit: 400_000,
+		verificationGasLimit: 400_000,
+		preVerificationGas: 100_000,
+		maxFeePerGas: hre.ethers.parseUnits("20", "gwei"),
+		maxPriorityFeePerGas: hre.ethers.parseUnits("10", "gwei"),
+		paymasterAndData: PM_ADDRESS,
 		signature: "0x",
 	};
+
+	const userOpHash = await entryPoint.getUserOpHash(userOp);
+	userOp.signature = signer0.signMessage(hre.ethers.getBytes(userOpHash))
 
 	const tx = await entryPoint.handleOps([userOp], address0);
 	const receipt = await tx.wait();
