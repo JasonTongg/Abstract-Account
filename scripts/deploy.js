@@ -13,11 +13,11 @@ async function main() {
 
 	// console.log(`EP deployed to ${ep.target}`);
 
-	const PM = await hre.ethers.deployContract("Paymaster");
+	// const PM = await hre.ethers.deployContract("Paymaster");
 
-	await PM.waitForDeployment();
+	// await PM.waitForDeployment();
 
-	console.log(`PM deployed to ${PM.target}`);
+	// console.log(`PM deployed to ${PM.target}`);
 }
 
 main().catch((error) => {
